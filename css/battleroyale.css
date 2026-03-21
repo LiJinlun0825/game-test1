@@ -1,0 +1,680 @@
+/**
+ * FPS竞技游戏样式
+ * 参考和平精英与CSGO风格
+ */
+
+/* ===== 竞技风格变量 ===== */
+:root {
+  --hud-bg: rgba(10, 10, 12, 0.75);
+  --health-color: #6FAF4A;
+  --health-low: #D4443C;
+  --armor-color: #4A8FC7;
+  --ammo-color: #E8E8E8;
+  --ammo-low: #D46A3C;
+  --accent-color: #F0A030;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9A9A9A;
+}
+
+/* ===== 加载屏幕 ===== */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+}
+
+#loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-content h2 {
+  color: var(--text-primary);
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  letter-spacing: 2px;
+}
+
+.loading-bar {
+  width: 300px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.loading-progress {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--health-color), var(--accent-color));
+  transition: width 0.3s ease;
+}
+
+#loading-text {
+  color: var(--text-secondary);
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+/* ===== 主菜单调整 ===== */
+#menu-screen {
+  background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
+}
+
+#menu-screen::before {
+  background-image:
+    url('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920&q=80'),
+    linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
+  opacity: 0.3;
+}
+
+#menu-screen .neon-title {
+  color: #ffffff;
+  text-shadow: none;
+  letter-spacing: 6px;
+  font-weight: 800;
+}
+
+#menu-screen .neon-title span {
+  color: var(--accent-color);
+  text-shadow: none;
+}
+
+/* ===== 游戏HUD ===== */
+#game-screen {
+  background: transparent;
+  pointer-events: none;
+}
+
+/* 顶部状态栏 - 竞技风格 */
+#top-bar {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 30px;
+  padding: 8px 25px;
+  background: var(--hud-bg);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 50px;
+}
+
+.status-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.status-value {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+/* 生命值/护甲条 - 左下角竞技风格 */
+#health-bar {
+  position: absolute;
+  bottom: 25px;
+  left: 25px;
+  width: 200px;
+}
+
+#health-bar .bar-container {
+  height: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#health-bar .bar {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.health-fill {
+  width: 100%;
+  background: linear-gradient(90deg, var(--health-color), #8FD06A);
+}
+
+.health-fill.low {
+  background: linear-gradient(90deg, var(--health-low), #E05A52);
+}
+
+.energy-fill {
+  width: 100%;
+  background: linear-gradient(90deg, var(--armor-color), #6AAFDF);
+}
+
+/* 血量/护甲数值显示 */
+.health-value, .armor-value {
+  position: absolute;
+  right: -50px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* 迷你地图 - 左上角圆形雷达 */
+#minimap {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 180px;
+  height: 180px;
+  background: var(--hud-bg);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+#minimap-canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+#safe-zone {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border: 1px solid var(--armor-color);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+#player-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid #FFFFFF;
+}
+
+/* 弹药显示 - 右下角 */
+#current-weapon-detail {
+  position: absolute;
+  bottom: 25px;
+  right: 25px;
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  padding: 12px 18px;
+  background: var(--hud-bg);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#current-weapon-detail .weapon-icon {
+  font-size: 24px;
+  opacity: 0.8;
+}
+
+.weapon-ammo {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+#current-ammo {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--ammo-color);
+  font-family: 'Segoe UI', sans-serif;
+  letter-spacing: -1px;
+}
+
+#current-ammo.low {
+  color: var(--ammo-low);
+}
+
+.ammo-separator {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+#reserve-ammo {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.fire-mode {
+  padding: 3px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+/* 武器槽位 - 右下角垂直 */
+#weapon-hud {
+  position: absolute;
+  bottom: 100px;
+  right: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weapon-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--hud-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  min-width: 130px;
+  opacity: 0.5;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.weapon-slot.active {
+  opacity: 1;
+  border-color: var(--accent-color);
+  background: rgba(240, 160, 48, 0.15);
+}
+
+.slot-key {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  font-size: 11px;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.weapon-slot.active .slot-key {
+  background: var(--accent-color);
+  color: #000;
+}
+
+.weapon-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.weapon-name {
+  font-size: 11px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.ammo-count {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--text-secondary);
+}
+
+.weapon-slot.active .ammo-count {
+  color: var(--accent-color);
+}
+
+.reload-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--accent-color);
+  transition: width 0.1s linear;
+}
+
+.weapon-slot.low-ammo .ammo-count {
+  color: var(--ammo-low);
+}
+
+.weapon-slot.low-ammo {
+  border-color: rgba(212, 106, 60, 0.4);
+}
+
+/* 背包HUD */
+#backpack-hud {
+  position: absolute;
+  bottom: 180px;
+  right: 25px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--hud-bg);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.backpack-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.backpack-level {
+  font-size: 11px;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+.backpack-slots {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* 准星 - 竞技风格 */
+#crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+#crosshair svg line {
+  stroke: #FFFFFF;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+#crosshair svg circle {
+  fill: rgba(255, 255, 255, 0.9);
+}
+
+/* 瞄准时准星收缩 */
+#crosshair.ads svg {
+  transform: scale(0.6);
+}
+
+/* 射击时准星扩散 */
+#crosshair.shooting svg {
+  transform: scale(1.3);
+}
+
+#crosshair-distance {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* 击杀信息 - 右上角 */
+#kill-feed {
+  position: absolute;
+  top: 60px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 280px;
+}
+
+.kill-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--hud-bg);
+  border-radius: 3px;
+  font-size: 12px;
+  animation: killItemFade 5s forwards;
+}
+
+.kill-item .killer {
+  color: var(--health-color);
+  font-weight: 500;
+}
+
+.kill-item .victim {
+  color: var(--health-low);
+  font-weight: 500;
+}
+
+.kill-item .weapon-icon {
+  opacity: 0.6;
+  font-size: 14px;
+}
+
+@keyframes killItemFade {
+  0%, 85% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(20px); }
+}
+
+/* 伤害方向指示器 */
+#damage-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.damage-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  transform-origin: center center;
+  opacity: 0;
+}
+
+.damage-arrow.active {
+  opacity: 1;
+  animation: damageArrow 0.8s ease-out forwards;
+}
+
+@keyframes damageArrow {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--angle)) scale(1.2);
+  }
+}
+
+/* 低血量警告 */
+body.low-health::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 998;
+  box-shadow: inset 0 0 80px rgba(200, 50, 50, 0.3);
+  animation: healthDanger 1.2s ease-in-out infinite;
+}
+
+@keyframes healthDanger {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 视角切换指示器 - 隐藏（纯第一人称） */
+#perspective-indicator {
+  display: none !important;
+}
+
+/* 结束游戏按钮 */
+#end-game-btn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  pointer-events: auto;
+  padding: 6px 15px;
+  font-size: 12px;
+  background: rgba(200, 50, 50, 0.3);
+  border: 1px solid rgba(200, 50, 50, 0.5);
+  color: #E05A52;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#end-game-btn:hover {
+  background: rgba(200, 50, 50, 0.5);
+}
+
+/* 换弹提示 */
+#reload-indicator {
+  position: fixed;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+  z-index: 998;
+}
+
+#reload-indicator.show {
+  display: flex;
+}
+
+#reload-indicator .reload-progress {
+  width: 80px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#reload-indicator .reload-progress::after {
+  content: '';
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: var(--accent-color);
+  animation: reloadFill 2s linear forwards;
+}
+
+@keyframes reloadFill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+#reload-indicator .reload-text {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+}
+
+/* 低弹药警告 */
+#low-ammo-warning {
+  top: 50%;
+}
+
+#low-ammo-warning .warning-text {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--ammo-low);
+  text-shadow: 0 0 10px rgba(212, 106, 60, 0.6);
+}
+
+/* 血量警告 */
+#health-warning {
+  background: rgba(200, 50, 50, 0.2);
+  padding: 8px 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(200, 50, 50, 0.4);
+}
+
+#health-warning .warning-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--health-low);
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 767px) {
+  #minimap {
+    width: 120px;
+    height: 120px;
+    top: 70px;
+    left: 10px;
+  }
+
+  #weapon-hud {
+    bottom: 30px;
+    right: 10px;
+  }
+
+  .weapon-slot {
+    min-width: 100px;
+    padding: 5px 8px;
+  }
+
+  #top-bar {
+    gap: 15px;
+    padding: 6px 15px;
+  }
+
+  .status-value {
+    font-size: 14px;
+  }
+
+  #health-bar {
+    width: 150px;
+    left: 10px;
+  }
+
+  #current-weapon-detail {
+    right: 10px;
+    padding: 8px 12px;
+  }
+
+  #current-ammo {
+    font-size: 28px;
+  }
+}

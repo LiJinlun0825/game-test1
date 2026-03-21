@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>大逃杀 - Battle Royale</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/effects.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+  <div id="game-container">
+    <!-- 3D 游戏画布 -->
+    <div id="game-canvas"></div>
+
+    <!-- UI 覆盖层 -->
+    <div id="ui-layer">
+      <div id="menu-screen" class="screen active">
+        <!-- 角落装饰 -->
+        <div class="corner-decor top-left"></div>
+        <div class="corner-decor top-right"></div>
+        <div class="corner-decor bottom-left"></div>
+        <div class="corner-decor bottom-right"></div>
+
+        <h1 class="neon-title">BATTLE<br><span>ROYALE</span></h1>
+
+        <div class="menu-buttons">
+          <button id="start-btn" class="neon-btn">▶ 开始游戏</button>
+          <button id="settings-btn" class="neon-btn">⚙ 设置</button>
+          <button id="help-btn" class="neon-btn">📖 操作说明</button>
+        </div>
+
+        <div class="version-info">v1.0.0 | BATTLE ROYALE</div>
+      </div>
+
+      <!-- 模式选择屏幕 -->
+      <div id="mode-screen" class="screen">
+        <h2 class="neon-title">选择模式</h2>
+        <div class="mode-grid">
+          <div class="mode-card" data-mode="classic">
+            <div class="mode-icon">🎯</div>
+            <div class="mode-name">经典模式</div>
+            <div class="mode-desc">限时闯关，达成目标分数过关</div>
+          </div>
+          <div class="mode-card" data-mode="survival">
+            <div class="mode-icon">💀</div>
+            <div class="mode-name">生存模式</div>
+            <div class="mode-desc">无限波次，3条命，挑战极限</div>
+          </div>
+          <div class="mode-card" data-mode="precision">
+            <div class="mode-icon">🎯</div>
+            <div class="mode-name">精准模式</div>
+            <div class="mode-desc">限定弹药，追求高命中率</div>
+          </div>
+          <div class="mode-card" data-mode="timed">
+            <div class="mode-icon">⏱️</div>
+            <div class="mode-name">限时模式</div>
+            <div class="mode-desc">60秒极限得分挑战</div>
+          </div>
+        </div>
+        <button id="mode-back-btn" class="neon-btn">返回</button>
+      </div>
+
+      <!-- 武器库屏幕 -->
+      <div id="weapons-screen" class="screen">
+        <h2 class="neon-title">武器库</h2>
+        <p class="weapons-hint">点击选择武器 | 游戏中按数字键快速切换</p>
+        <div class="weapons-grid">
+          <!-- 手枪类 -->
+          <div class="weapon-category">
+            <div class="category-title">🔫 手枪</div>
+            <div class="weapon-card unlocked selected" data-weapon="glock17">
+              <div class="weapon-icon">🔫</div>
+              <div class="weapon-name">Glock 17</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:35%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:50%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:95%"></div></div>
+                <div class="stat"><span>弹夹</span><span>17发</span></div>
+              </div>
+              <div class="weapon-special">9mm | 奥地利</div>
+              <div class="weapon-key">按 [1] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="deagle">
+              <div class="weapon-icon">🔫</div>
+              <div class="weapon-name">Desert Eagle</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:75%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:25%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:85%"></div></div>
+                <div class="stat"><span>弹夹</span><span>7发</span></div>
+              </div>
+              <div class="weapon-special">.50 AE | 以色列</div>
+              <div class="weapon-key">按 [2] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="revolver">
+              <div class="weapon-icon">🔫</div>
+              <div class="weapon-name">Python .357</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:65%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:30%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:90%"></div></div>
+                <div class="stat"><span>弹夹</span><span>6发</span></div>
+              </div>
+              <div class="weapon-special">.357 Mag | 美国</div>
+              <div class="weapon-key">按 [3] 切换</div>
+            </div>
+          </div>
+
+          <!-- 步枪类 -->
+          <div class="weapon-category">
+            <div class="category-title">🎯 步枪</div>
+            <div class="weapon-card unlocked" data-weapon="ak47">
+              <div class="weapon-icon">🎯</div>
+              <div class="weapon-name">AK-47</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:45%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:80%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:70%"></div></div>
+                <div class="stat"><span>弹夹</span><span>30发</span></div>
+              </div>
+              <div class="weapon-special">7.62mm | 苏联</div>
+              <div class="weapon-key">按 [4] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="m4a1">
+              <div class="weapon-icon">🎯</div>
+              <div class="weapon-name">M4A1</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:30%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:100%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:85%"></div></div>
+                <div class="stat"><span>弹夹</span><span>30发</span></div>
+              </div>
+              <div class="weapon-special">5.56mm | 美国</div>
+              <div class="weapon-key">按 [5] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="scarh">
+              <div class="weapon-icon">🎯</div>
+              <div class="weapon-name">SCAR-H</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:42%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:85%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:88%"></div></div>
+                <div class="stat"><span>弹夹</span><span>20发</span></div>
+              </div>
+              <div class="weapon-special">7.62mm | 比利时</div>
+              <div class="weapon-key">按 [6] 切换</div>
+            </div>
+          </div>
+
+          <!-- 冲锋枪类 -->
+          <div class="weapon-category">
+            <div class="category-title">⚡ 冲锋枪</div>
+            <div class="weapon-card unlocked" data-weapon="mp5">
+              <div class="weapon-icon">⚡</div>
+              <div class="weapon-name">MP5</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:24%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:95%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:80%"></div></div>
+                <div class="stat"><span>弹夹</span><span>30发</span></div>
+              </div>
+              <div class="weapon-special">9mm | 德国</div>
+              <div class="weapon-key">按 [7] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="p90">
+              <div class="weapon-icon">⚡</div>
+              <div class="weapon-name">P90</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:21%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:100%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:75%"></div></div>
+                <div class="stat"><span>弹夹</span><span>50发</span></div>
+              </div>
+              <div class="weapon-special">5.7mm | 比利时</div>
+              <div class="weapon-key">按 [8] 切换</div>
+            </div>
+          </div>
+
+          <!-- 狙击枪类 -->
+          <div class="weapon-category">
+            <div class="category-title">🔭 狙击枪</div>
+            <div class="weapon-card unlocked" data-weapon="awp">
+              <div class="weapon-icon">🔭</div>
+              <div class="weapon-name">AWP</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:100%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:15%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:100%"></div></div>
+                <div class="stat"><span>弹夹</span><span>5发</span></div>
+              </div>
+              <div class="weapon-special">.338 Lapua | 英国</div>
+              <div class="weapon-key">按 [9] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="barrett">
+              <div class="weapon-icon">🔭</div>
+              <div class="weapon-name">Barrett M82</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:100%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:20%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:95%"></div></div>
+                <div class="stat"><span>弹夹</span><span>10发</span></div>
+              </div>
+              <div class="weapon-special">.50 BMG | 美国</div>
+              <div class="weapon-key">按 [0] 切换</div>
+            </div>
+          </div>
+
+          <!-- 霰弹枪类 -->
+          <div class="weapon-category">
+            <div class="category-title">💥 霰弹枪</div>
+            <div class="weapon-card unlocked" data-weapon="spas12">
+              <div class="weapon-icon">💥</div>
+              <div class="weapon-name">SPAS-12</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:55%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:28%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:60%"></div></div>
+                <div class="stat"><span>弹夹</span><span>8发</span></div>
+              </div>
+              <div class="weapon-special">12号 | 意大利</div>
+              <div class="weapon-key">按 [-] 切换</div>
+            </div>
+            <div class="weapon-card unlocked" data-weapon="aa12">
+              <div class="weapon-icon">💥</div>
+              <div class="weapon-name">AA-12</div>
+              <div class="weapon-stats">
+                <div class="stat"><span>伤害</span><div class="stat-bar" style="width:36%"></div></div>
+                <div class="stat"><span>射速</span><div class="stat-bar" style="width:60%"></div></div>
+                <div class="stat"><span>精准</span><div class="stat-bar" style="width:50%"></div></div>
+                <div class="stat"><span>弹夹</span><span>20发</span></div>
+              </div>
+              <div class="weapon-special">全自动 | 美国</div>
+              <div class="weapon-key">按 [=] 切换</div>
+            </div>
+          </div>
+        </div>
+        <button id="weapons-back-btn" class="neon-btn">返回</button>
+      </div>
+
+      <div id="game-screen" class="screen">
+        <!-- 顶部状态栏 -->
+        <div id="top-bar">
+          <div class="status-item">
+            <span class="status-label">存活</span>
+            <span id="alive-count" class="status-value">100</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">击杀</span>
+            <span id="kill-count" class="status-value">0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">存活时间</span>
+            <span id="survive-time" class="status-value">00:00</span>
+          </div>
+        </div>
+
+        <!-- 生命值和护甲条 -->
+        <div id="health-bar">
+          <div class="bar-label">HP</div>
+          <div class="bar-container health-container">
+            <div class="bar health-fill" id="health-fill"></div>
+            <span class="bar-value" id="health-value">100</span>
+          </div>
+          <div class="bar-label armor-label">护甲</div>
+          <div class="bar-container armor-container">
+            <div class="bar armor-fill" id="armor-fill"></div>
+            <span class="bar-value" id="armor-value">100</span>
+          </div>
+        </div>
+
+        <!-- 迷你地图 -->
+        <div id="minimap">
+          <canvas id="minimap-canvas" width="200" height="200"></canvas>
+          <div id="safe-zone"></div>
+          <div id="player-marker"></div>
+        </div>
+
+        <!-- 武器HUD -->
+        <div id="weapon-hud">
+          <div class="weapon-slot active" id="slot1">
+            <span class="slot-key">1</span>
+            <div class="weapon-info">
+              <span class="weapon-name">空</span>
+              <span class="ammo-count"></span>
+            </div>
+            <div class="reload-bar"></div>
+          </div>
+          <div class="weapon-slot" id="slot2">
+            <span class="slot-key">2</span>
+            <div class="weapon-info">
+              <span class="weapon-name">空</span>
+              <span class="ammo-count"></span>
+            </div>
+            <div class="reload-bar"></div>
+          </div>
+          <div class="weapon-slot" id="slot3">
+            <span class="slot-key">3</span>
+            <div class="weapon-info">
+              <span class="weapon-name">空</span>
+              <span class="ammo-count"></span>
+            </div>
+            <div class="reload-bar"></div>
+          </div>
+        </div>
+
+        <!-- 当前武器详情 -->
+        <div id="current-weapon-detail">
+          <div class="weapon-icon">🔫</div>
+          <div class="weapon-ammo">
+            <span id="current-ammo">30</span>
+            <span class="ammo-separator">/</span>
+            <span id="reserve-ammo">90</span>
+          </div>
+          <div class="fire-mode" id="fire-mode">AUTO</div>
+        </div>
+
+        <!-- 背包信息 -->
+        <div id="backpack-hud">
+          <div class="backpack-icon">🎒</div>
+          <span class="backpack-level">Lv.1</span>
+          <span class="backpack-slots">20/50</span>
+        </div>
+
+        <!-- 击杀提示 -->
+        <div id="kill-feed"></div>
+
+        <button id="end-game-btn" class="neon-btn-small">结束游戏</button>
+      </div>
+
+      <div id="pause-screen" class="screen">
+        <h2 class="neon-title">暂停</h2>
+        <button id="resume-btn" class="neon-btn">继续</button>
+        <button id="quit-btn" class="neon-btn">退出</button>
+      </div>
+
+      <div id="gameover-screen" class="screen">
+        <h2 class="neon-title">游戏结束</h2>
+        <div id="result-panel">
+          <div class="result-item">
+            <span class="result-label">排名</span>
+            <span id="final-rank" class="result-value">#1</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">击杀</span>
+            <span id="final-kills" class="result-value">0</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">伤害</span>
+            <span id="final-damage" class="result-value">0</span>
+          </div>
+          <div class="result-item">
+            <span class="result-label">存活时间</span>
+            <span id="final-time" class="result-value">00:00</span>
+          </div>
+        </div>
+        <button id="restart-btn" class="neon-btn">重新开始</button>
+        <button id="menu-btn" class="neon-btn">返回菜单</button>
+      </div>
+
+      <div id="leaderboard-screen" class="screen">
+        <h2 class="neon-title">排行榜</h2>
+        <div id="leaderboard-list"></div>
+        <button id="back-btn" class="neon-btn">返回</button>
+      </div>
+
+      <div id="help-screen" class="screen">
+        <h2 class="neon-title">操作说明</h2>
+        <div class="help-content">
+          <h3>🎯 移动控制</h3>
+          <p><b>W/A/S/D</b> - 移动</p>
+          <p><b>Shift</b> - 冲刺</p>
+          <p><b>Space</b> - 跳跃</p>
+          <p><b>C</b> - 蹲伏</p>
+          <p><b>Z</b> - 趴下</p>
+
+          <h3>🔫 战斗控制</h3>
+          <p><b>鼠标移动</b> - 控制视角</p>
+          <p><b>左键</b> - 射击</p>
+          <p><b>右键</b> - 瞄准</p>
+          <p><b>R</b> - 换弹</p>
+          <p><b>1/2/3</b> - 切换武器</p>
+
+          <h3>🎒 物品管理</h3>
+          <p><b>E</b> - 拾取物品</p>
+          <p><b>Tab</b> - 打开背包</p>
+          <p><b>M</b> - 打开地图</p>
+
+          <h3>⚠️ 提示</h3>
+          <p>点击屏幕开始游戏并锁定鼠标</p>
+          <p>按 ESC 暂停游戏</p>
+        </div>
+        <button id="help-back-btn" class="neon-btn">返回</button>
+      </div>
+    </div>
+
+    <!-- 准星 - 竞技风格 -->
+    <div id="crosshair" class="fps first-person">
+      <svg viewBox="0 0 120 120" width="60" height="60">
+        <!-- 十字线 -->
+        <line x1="60" y1="15" x2="60" y2="45" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="60" y1="75" x2="60" y2="105" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="15" y1="60" x2="45" y2="60" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="75" y1="60" x2="105" y2="60" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- 中心点 -->
+        <circle cx="60" cy="60" r="1.5" fill="#FFFFFF"/>
+      </svg>
+      <!-- 距离指示器 -->
+      <div id="crosshair-distance">--m</div>
+    </div>
+
+    <!-- 伤害方向指示器 -->
+    <div id="damage-indicator">
+      <!-- 动态生成的伤害箭头 -->
+    </div>
+
+    <!-- 击中提示 -->
+    <div id="hit-indicator">
+      <span id="hit-text"></span>
+    </div>
+
+    <!-- 低弹药警告 -->
+    <div id="low-ammo-warning" class="game-warning">
+      <span class="warning-icon">⚠️</span>
+      <span class="warning-text">弹药不足</span>
+    </div>
+
+    <!-- 血量警告 -->
+    <div id="health-warning" class="game-warning">
+      <span class="warning-text">生命值过低！</span>
+    </div>
+
+    <!-- 换弹提示 -->
+    <div id="reload-indicator">
+      <div class="reload-progress"></div>
+      <span class="reload-text">换弹中...</span>
+    </div>
+
+    <!-- 分数弹出 -->
+    <div id="score-popup"></div>
+
+    <!-- 枪口闪光 -->
+    <div id="muzzle-flash"></div>
+  </div>
+
+  <!-- 加载提示 -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <h2>加载中...</h2>
+      <div class="loading-bar">
+        <div class="loading-progress" id="loading-progress"></div>
+      </div>
+      <p id="loading-text">正在初始化...</p>
+    </div>
+  </div>
+
+  <!-- 大逃杀游戏入口 -->
+  <script src="src/main.js" type="module"></script>
+</body>
+</html>
