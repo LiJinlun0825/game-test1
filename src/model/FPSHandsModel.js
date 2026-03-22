@@ -28,16 +28,29 @@ export class FPSHandsModel {
     this.handsGroup = new THREE.Group();
 
     // 创建左手
-    const leftHand = this.createHand(0x1a1a1a);
-    leftHand.position.set(-0.15, -0.1, -0.3);
+    const leftHand = this.createHand('left');
+    leftHand.position.set(-0.18, -0.12, -0.32);
+    leftHand.rotation.set(0.1, 0.1, -0.05);
     leftHand.name = 'leftHand';
     this.handsGroup.add(leftHand);
 
     // 创建右手
-    const rightHand = this.createHand(0x1a1a1a);
-    rightHand.position.set(0.15, -0.1, -0.3);
+    const rightHand = this.createHand('right');
+    rightHand.position.set(0.18, -0.12, -0.32);
+    rightHand.rotation.set(0.1, -0.1, 0.05);
     rightHand.name = 'rightHand';
     this.handsGroup.add(rightHand);
+
+    // 创建手臂
+    const leftArm = this.createArm('left');
+    leftArm.position.set(-0.25, 0.05, -0.25);
+    leftArm.rotation.set(0.3, 0.2, 0.3);
+    this.handsGroup.add(leftArm);
+
+    const rightArm = this.createArm('right');
+    rightArm.position.set(0.25, 0.05, -0.25);
+    rightArm.rotation.set(0.3, -0.2, -0.3);
+    this.handsGroup.add(rightArm);
 
     // 将手部组添加到相机
     this.camera.add(this.handsGroup);
@@ -48,34 +61,66 @@ export class FPSHandsModel {
   /**
    * 创建单只手
    */
-  createHand(skinColor) {
+  createHand(side) {
     const handGroup = new THREE.Group();
+    handGroup.name = `hand-${side}`;
 
-    // 手掌
-    const palmGeometry = new THREE.BoxGeometry(0.08, 0.03, 0.12);
-    const skinMaterial = new THREE.MeshLambertMaterial({ color: skinColor });
-    const palm = new THREE.Mesh(palmGeometry, skinMaterial);
-    handGroup.add(palm);
+    // 皮肤材质
+    const skinMaterial = new THREE.MeshStandardMaterial({
+      color: 0xE8C8A8,
+      roughness: 0.7,
+      metalness: 0.0
+    });
 
-    // 手指 (4根手指 + 1根拇指)
-    const fingerPositions = [
-      { x: -0.025, z: -0.05 },  // 小指
-      { x: -0.01, z: -0.055 },   // 无名指
-      { x: 0.01, z: -0.055 },    // 中指
-      { x: 0.025, z: -0.05 }     // 食指
+    // 手套材质
+    const gloveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2A2A2A,
+      roughness: 0.8,
+      metalness: 0.1
+    });
+
+    // 手套主体
+    const gloveGeom = new THREE.BoxGeometry(0.085, 0.035, 0.11);
+    const glove = new THREE.Mesh(gloveGeom, gloveMaterial);
+    glove.castShadow = true;
+    handGroup.add(glove);
+
+    // 手套顶部装饰线
+    const gloveLineGeom = new THREE.BoxGeometry(0.087, 0.003, 0.112);
+    const gloveLineMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3A3A3A,
+      roughness: 0.8
+    });
+    const gloveLine = new THREE.Mesh(gloveLineGeom, gloveLineMaterial);
+    gloveLine.position.y = 0.018;
+    handGroup.add(gloveLine);
+
+    // 手指配置
+    const fingerConfigs = [
+      { name: 'pinky', x: -0.032, z: -0.045, length: 0.04, width: 0.012 },
+      { name: 'ring', x: -0.011, z: -0.05, length: 0.045, width: 0.013 },
+      { name: 'middle', x: 0.01, z: -0.052, length: 0.05, width: 0.014 },
+      { name: 'index', x: 0.031, z: -0.048, length: 0.047, width: 0.013 }
     ];
 
-    fingerPositions.forEach(pos => {
-      const finger = this.createFinger(skinMaterial);
-      finger.position.set(pos.x, 0, pos.z);
+    fingerConfigs.forEach(config => {
+      const finger = this.createFinger(config.length, config.width, skinMaterial, gloveMaterial);
+      finger.position.set(config.x, 0, config.z);
+      finger.name = config.name;
       handGroup.add(finger);
     });
 
     // 拇指
-    const thumb = this.createFinger(skinMaterial, true);
-    thumb.position.set(-0.04, -0.01, 0);
-    thumb.rotation.z = Math.PI / 4;
+    const thumb = this.createThumb(skinMaterial, gloveMaterial, side);
+    thumb.position.set(-0.045, -0.005, 0.02);
     handGroup.add(thumb);
+
+    // 手腕
+    const wristGeom = new THREE.CylinderGeometry(0.035, 0.04, 0.04, 10);
+    const wrist = new THREE.Mesh(wristGeom, gloveMaterial);
+    wrist.position.set(0, 0, 0.08);
+    wrist.rotation.x = Math.PI * 0.5;
+    handGroup.add(wrist);
 
     return handGroup;
   }
@@ -83,28 +128,101 @@ export class FPSHandsModel {
   /**
    * 创建手指
    */
-  createFinger(material, isThumb = false) {
+  createFinger(length, width, skinMaterial, gloveMaterial) {
     const fingerGroup = new THREE.Group();
 
-    const length = isThumb ? 0.04 : 0.05;
-    const width = isThumb ? 0.015 : 0.012;
+    // 第一节（戴手套）- 使用圆柱体+球体
+    const seg1Group = new THREE.Group();
+    const seg1CylGeom = new THREE.CylinderGeometry(width * 0.5, width * 0.45, length * 0.35, 6);
+    const seg1Cyl = new THREE.Mesh(seg1CylGeom, gloveMaterial);
+    seg1Group.add(seg1Cyl);
+    const seg1CapGeom = new THREE.SphereGeometry(width * 0.45, 6, 4);
+    const seg1Cap = new THREE.Mesh(seg1CapGeom, gloveMaterial);
+    seg1Cap.position.y = length * 0.175;
+    seg1Group.add(seg1Cap);
+    seg1Group.rotation.x = Math.PI * 0.5;
+    fingerGroup.add(seg1Group);
 
-    // 手指段
-    const segment1 = new THREE.Mesh(
-      new THREE.BoxGeometry(width, width, length),
-      material
-    );
-    segment1.position.z = -length / 2;
-    fingerGroup.add(segment1);
+    // 关节
+    const knuckleGeom = new THREE.SphereGeometry(width * 0.45, 6, 6);
+    const knuckle = new THREE.Mesh(knuckleGeom, skinMaterial);
+    knuckle.position.z = -length * 0.35;
+    fingerGroup.add(knuckle);
 
-    const segment2 = new THREE.Mesh(
-      new THREE.BoxGeometry(width * 0.9, width * 0.9, length * 0.8),
-      material
-    );
-    segment2.position.z = -length - length * 0.4;
-    fingerGroup.add(segment2);
+    // 第二节（皮肤）
+    const seg2Group = new THREE.Group();
+    const seg2CylGeom = new THREE.CylinderGeometry(width * 0.4, width * 0.35, length * 0.35, 6);
+    const seg2Cyl = new THREE.Mesh(seg2CylGeom, skinMaterial);
+    seg2Group.add(seg2Cyl);
+    seg2Group.position.z = -length * 0.5;
+    seg2Group.rotation.x = Math.PI * 0.5;
+    fingerGroup.add(seg2Group);
+
+    // 指尖
+    const tipGeom = new THREE.SphereGeometry(width * 0.35, 6, 6);
+    const tip = new THREE.Mesh(tipGeom, skinMaterial);
+    tip.position.z = -length * 0.85;
+    fingerGroup.add(tip);
 
     return fingerGroup;
+  }
+
+  /**
+   * 创建拇指
+   */
+  createThumb(skinMaterial, gloveMaterial, side) {
+    const thumbGroup = new THREE.Group();
+
+    // 拇指基部（手套）- 使用圆柱体+球体
+    const baseCylGeom = new THREE.CylinderGeometry(0.012, 0.011, 0.025, 6);
+    const baseCyl = new THREE.Mesh(baseCylGeom, gloveMaterial);
+    thumbGroup.add(baseCyl);
+    const baseCapGeom = new THREE.SphereGeometry(0.011, 6, 4);
+    const baseCap = new THREE.Mesh(baseCapGeom, gloveMaterial);
+    baseCap.position.y = 0.015;
+    thumbGroup.add(baseCap);
+    thumbGroup.rotation.set(Math.PI * 0.3, 0, Math.PI * 0.2);
+
+    // 拇指尖（皮肤）
+    const tipGeom = new THREE.SphereGeometry(0.011, 6, 6);
+    const tip = new THREE.Mesh(tipGeom, skinMaterial);
+    tip.position.set(-0.02, -0.015, -0.015);
+    thumbGroup.add(tip);
+
+    return thumbGroup;
+  }
+
+  /**
+   * 创建手臂
+   */
+  createArm(side) {
+    const armGroup = new THREE.Group();
+
+    // 袖子材质
+    const sleeveMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4A7A4A,
+      roughness: 0.85,
+      metalness: 0.0
+    });
+
+    // 袖子
+    const sleeveGeom = new THREE.CylinderGeometry(0.045, 0.05, 0.15, 10);
+    const sleeve = new THREE.Mesh(sleeveGeom, sleeveMaterial);
+    sleeve.rotation.x = Math.PI * 0.3;
+    armGroup.add(sleeve);
+
+    // 袖口
+    const cuffGeom = new THREE.TorusGeometry(0.04, 0.005, 6, 12);
+    const cuffMaterial = new THREE.MeshStandardMaterial({
+      color: 0x3A6A3A,
+      roughness: 0.9
+    });
+    const cuff = new THREE.Mesh(cuffGeom, cuffMaterial);
+    cuff.position.z = -0.06;
+    cuff.rotation.y = Math.PI * 0.5;
+    armGroup.add(cuff);
+
+    return armGroup;
   }
 
   /**

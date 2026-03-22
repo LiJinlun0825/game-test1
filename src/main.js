@@ -5,7 +5,7 @@ import { Engine } from './core/Engine.js';
 import { InputManager } from './core/InputManager.js';
 import { Player } from './entity/Player.js';
 import { Enemy } from './entity/Enemy.js';
-import { FirstPersonCamera } from './camera/FirstPersonCamera.js';
+import { CameraController } from './camera/CameraController.js';
 import { World } from './world/World.js';
 
 /**
@@ -84,12 +84,15 @@ class BattleRoyaleGame {
       this.world.setPlayer(this.player);
 
       this.updateLoadingProgress(80, '创建相机...');
-      this.cameraController = new FirstPersonCamera(
+      this.cameraController = new CameraController(
         this.engine.getCamera(),
         this.player
       );
       this.cameraController.setInputManager(this.inputManager);
       this.player.cameraController = this.cameraController;
+
+      // 设置武器控制器的相机引用
+      this.player.weaponController.setCamera(this.engine.getCamera());
 
       this.updateLoadingProgress(90, '初始化UI...');
       this.initUI();
@@ -139,7 +142,8 @@ class BattleRoyaleGame {
       surviveTime: document.getElementById('survive-time'),
       healthFill: document.getElementById('health-fill'),
       healthValue: document.getElementById('health-value'),
-      minimapCanvas: document.getElementById('minimap-canvas')
+      minimapCanvas: document.getElementById('minimap-canvas'),
+      helpModal: document.getElementById('help-modal')
     };
 
     this.minimapCtx = this.elements.minimapCanvas?.getContext('2d');
@@ -190,12 +194,41 @@ class BattleRoyaleGame {
       this.showInGameHelp();
     });
 
+    // 弹窗关闭按钮
+    document.getElementById('help-modal-close')?.addEventListener('click', () => {
+      this.hideInGameHelp();
+    });
+
+    // 点击弹窗背景关闭
+    this.elements.helpModal?.addEventListener('click', (e) => {
+      if (e.target === this.elements.helpModal) {
+        this.hideInGameHelp();
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        // 如果弹窗打开，关闭弹窗
+        if (this.elements.helpModal?.classList.contains('active')) {
+          this.hideInGameHelp();
+          return;
+        }
         if (this.gameState.is('playing')) {
           this.pauseGame();
         } else if (this.gameState.is('paused')) {
           this.resumeGame();
+        }
+      }
+
+      // H键显示操作说明
+      if (e.key === 'h' || e.key === 'H') {
+        if (this.gameState.is('playing')) {
+          // 如果弹窗已打开则关闭
+          if (this.elements.helpModal?.classList.contains('active')) {
+            this.hideInGameHelp();
+          } else {
+            this.showInGameHelp();
+          }
         }
       }
     });
@@ -204,6 +237,26 @@ class BattleRoyaleGame {
       const crosshair = document.getElementById('crosshair');
       if (crosshair) {
         crosshair.style.display = document.pointerLockElement ? 'block' : 'none';
+      }
+    });
+
+    // 点击游戏画面时锁定鼠标
+    const gameCanvas = document.getElementById('game-canvas');
+    if (gameCanvas) {
+      gameCanvas.addEventListener('click', () => {
+        if (this.gameState.is('playing') && !this.inputManager.isPointerLocked) {
+          this.inputManager.requestPointerLock();
+        }
+      });
+    }
+
+    // 点击整个游戏区域也可以锁定
+    document.getElementById('game-container')?.addEventListener('click', (e) => {
+      if (this.gameState.is('playing') && !this.inputManager.isPointerLocked) {
+        // 只有点击游戏区域本身时才锁定（不是按钮）
+        if (e.target.tagName !== 'BUTTON') {
+          this.inputManager.requestPointerLock();
+        }
       }
     });
   }
@@ -252,9 +305,13 @@ class BattleRoyaleGame {
   showInGameHelp() {
     this.engine.pause();
     this.inputManager.exitPointerLock();
-    // 显示帮助屏幕但不改变游戏状态
-    Object.values(this.screens).forEach(s => s?.classList.remove('active'));
-    this.screens.help?.classList.add('active');
+    this.elements.helpModal?.classList.add('active');
+  }
+
+  hideInGameHelp() {
+    this.elements.helpModal?.classList.remove('active');
+    this.engine.resume();
+    this.inputManager.requestPointerLock();
   }
 
   resumeGame() {
@@ -320,6 +377,9 @@ class BattleRoyaleGame {
 
     // 更新武器控制器
     this.player.weaponController.update(deltaTime, this.surviveTime);
+
+    // 同步瞄准状态到相机
+    this.cameraController.setAiming(this.player.weaponController.getIsAiming());
 
     this.updateEnemies(deltaTime);
     this.updateUI();

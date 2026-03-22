@@ -56,13 +56,24 @@ export class CharacterController {
 
     // 获取相机yaw角度
     const cameraYaw = this.entity.cameraController?.getYaw() ?? 0;
+    const cameraMode = this.entity.cameraController?.getMode() ?? 'first-person';
 
-    // 相对于相机方向移动
+    // 根据视角模式调整移动方向计算
+    // 第三人称：W按下时角色向相机前方（远离相机）移动
+    // 第一人称：W按下时角色向相机前方移动
     const forward = new THREE.Vector3(0, 0, -1);
     const right = new THREE.Vector3(1, 0, 0);
 
-    forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
-    right.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
+    if (cameraMode === 'third-person') {
+      // 第三人称：相机围绕玩家旋转，yaw 表示相机位置
+      // 玩家按 W 应该向相机前方（远离相机方向）移动
+      forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
+      right.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
+    } else {
+      // 第一人称：yaw 表示玩家面向的方向
+      forward.applyAxisAngle(new THREE.Vector3(0, 1, 0), -cameraYaw);
+      right.applyAxisAngle(new THREE.Vector3(0, 1, 0), -cameraYaw);
+    }
 
     this.moveDirection.add(forward.multiplyScalar(-moveInput.z));
     this.moveDirection.add(right.multiplyScalar(moveInput.x));

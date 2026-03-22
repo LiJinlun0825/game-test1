@@ -167,11 +167,6 @@ export class Engine {
 
     if (this.isPaused) return;
 
-    // 更新输入管理器
-    if (this.inputManager) {
-      this.inputManager.update();
-    }
-
     // 更新世界
     if (this.world) {
       this.world.update(this.deltaTime);
@@ -182,13 +177,18 @@ export class Engine {
       this.player.update(this.deltaTime);
     }
 
-    // 更新回调
+    // 更新回调（包含相机更新，需要使用鼠标移动数据）
     if (this.onUpdate) {
       this.onUpdate(this.deltaTime, this.elapsedTime);
     }
 
     // 渲染
     this.render();
+
+    // 最后清零输入状态，为下一帧准备
+    if (this.inputManager) {
+      this.inputManager.update();
+    }
   }
 
   /**

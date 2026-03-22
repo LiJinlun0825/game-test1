@@ -14,13 +14,71 @@
     <div id="ui-layer">
       <!-- 菜单屏幕 -->
       <div id="menu-screen" class="screen active">
-        <h1 class="game-title">BATTLE ROYALE</h1>
-        <h2 class="game-subtitle">大逃杀</h2>
-        <div class="menu-buttons">
-          <button id="start-btn" class="menu-btn">开始游戏</button>
-          <button id="help-btn" class="menu-btn">操作说明</button>
+        <div class="menu-bg-effects">
+          <div class="grid-lines"></div>
+          <div class="floating-particles" id="particles"></div>
         </div>
-        <div class="version-info">v1.0.0</div>
+        <div class="menu-content">
+          <div class="title-container">
+            <div class="title-decoration top"></div>
+            <h1 class="game-title">
+              <span class="title-line">BATTLE</span>
+              <span class="title-line highlight">ROYALE</span>
+            </h1>
+            <h2 class="game-subtitle">
+              <span class="subtitle-icon">⚔️</span>
+              大逃杀
+              <span class="subtitle-icon">⚔️</span>
+            </h2>
+            <div class="title-decoration bottom"></div>
+          </div>
+
+          <div class="game-stats">
+            <div class="stat-item">
+              <span class="stat-icon">👥</span>
+              <span class="stat-value">21</span>
+              <span class="stat-label">玩家</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-icon">🗺️</span>
+              <span class="stat-value">500m</span>
+              <span class="stat-label">地图</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-icon">🏆</span>
+              <span class="stat-value">1</span>
+              <span class="stat-label">胜者</span>
+            </div>
+          </div>
+
+          <div class="menu-buttons">
+            <button id="start-btn" class="menu-btn primary">
+              <span class="btn-icon">🎮</span>
+              <span class="btn-text">开始游戏</span>
+              <span class="btn-arrow">→</span>
+            </button>
+            <button id="help-btn" class="menu-btn secondary">
+              <span class="btn-icon">📖</span>
+              <span class="btn-text">操作说明</span>
+            </button>
+          </div>
+
+          <div class="menu-footer">
+            <div class="footer-line"></div>
+            <div class="footer-content">
+              <span class="footer-item">🎯 瞄准射击</span>
+              <span class="footer-item">🏃 快速移动</span>
+              <span class="footer-item">💥 消灭敌人</span>
+            </div>
+          </div>
+
+          <div class="version-info">
+            <span class="version-label">VERSION</span>
+            <span class="version-number">1.0.0</span>
+          </div>
+        </div>
       </div>
 
       <!-- 游戏屏幕 -->
@@ -106,43 +164,161 @@
         <button id="menu-btn" class="menu-btn">返回菜单</button>
       </div>
 
-      <!-- 帮助屏幕 -->
+      <!-- 帮助弹窗 (游戏中使用) -->
+      <div id="help-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title">📖 操作说明</h2>
+            <button id="help-modal-close" class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            <div class="help-grid">
+              <div class="help-item movement">
+                <div class="help-icon">🎮</div>
+                <h3>移动控制</h3>
+                <div class="key-row"><span class="key-badge">W</span><span class="key-desc">向前</span></div>
+                <div class="key-row"><span class="key-badge">S</span><span class="key-desc">向后</span></div>
+                <div class="key-row"><span class="key-badge">A</span><span class="key-desc">向左</span></div>
+                <div class="key-row"><span class="key-badge">D</span><span class="key-desc">向右</span></div>
+                <div class="key-row"><span class="key-badge wide">Shift</span><span class="key-desc">冲刺</span></div>
+                <div class="key-row"><span class="key-badge wide">Space</span><span class="key-desc">跳跃</span></div>
+                <div class="key-row"><span class="key-badge">C</span><span class="key-desc">蹲伏</span></div>
+              </div>
+              <div class="help-item combat">
+                <div class="help-icon">🎯</div>
+                <h3>战斗控制</h3>
+                <div class="key-row"><span class="key-badge wide">鼠标</span><span class="key-desc">视角</span></div>
+                <div class="key-row"><span class="key-badge wide">左键</span><span class="key-desc">射击</span></div>
+                <div class="key-row"><span class="key-badge wide">右键</span><span class="key-desc">瞄准</span></div>
+                <div class="key-row"><span class="key-badge">R</span><span class="key-desc">换弹</span></div>
+                <div class="key-row"><span class="key-badge">1</span><span class="key-badge">2</span><span class="key-badge">3</span><span class="key-desc">武器</span></div>
+              </div>
+              <div class="help-item camera">
+                <div class="help-icon">📷</div>
+                <h3>视角控制</h3>
+                <div class="key-row"><span class="key-badge">V</span><span class="key-desc">切换视角</span></div>
+                <div class="key-row"><span class="key-badge wide">滚轮</span><span class="key-desc">相机距离</span></div>
+                <div class="key-note"><span class="note-icon">👁️</span>第一人称</div>
+                <div class="key-note"><span class="note-icon">👤</span>第三人称</div>
+              </div>
+              <div class="help-item system">
+                <div class="help-icon">⚙️</div>
+                <h3>系统操作</h3>
+                <div class="key-row"><span class="key-badge wide">ESC</span><span class="key-desc">暂停</span></div>
+                <div class="key-row"><span class="key-badge">H</span><span class="key-desc">帮助</span></div>
+                <div class="key-row"><span class="key-badge">E</span><span class="key-desc">拾取</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <span class="hint-text">按 <kbd>H</kbd> 或点击关闭</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 帮助屏幕 (菜单中使用) -->
       <div id="help-screen" class="screen">
-        <h2 class="screen-title">操作说明</h2>
+        <div class="help-bg-effects">
+          <div class="help-grid-bg"></div>
+          <div class="help-glow-orb"></div>
+        </div>
+        <div class="help-header">
+          <div class="help-header-icon">📖</div>
+          <h2 class="screen-title">操作说明</h2>
+          <p class="help-subtitle">掌握战斗技巧，成为最后的幸存者</p>
+        </div>
+        <div class="help-scroll-hint">
+          <span class="scroll-icon">↓</span>
+          <span>向下滚动查看更多</span>
+          <span class="scroll-icon">↓</span>
+        </div>
         <div class="help-container">
-          <div class="help-section">
-            <div class="help-icon">🎮</div>
-            <h3>移动控制</h3>
-            <div class="key-row"><span class="key-badge">W</span> 向前移动</div>
-            <div class="key-row"><span class="key-badge">S</span> 向后移动</div>
-            <div class="key-row"><span class="key-badge">A</span> 向左移动</div>
-            <div class="key-row"><span class="key-badge">D</span> 向右移动</div>
-            <div class="key-row"><span class="key-badge">Shift</span> 冲刺加速</div>
-            <div class="key-row"><span class="key-badge">Space</span> 跳跃</div>
-            <div class="key-row"><span class="key-badge">C</span> 蹲伏</div>
+          <div class="help-section movement">
+            <div class="section-header">
+              <div class="help-icon">🎮</div>
+              <h3>移动控制</h3>
+              <div class="section-badge">基础</div>
+            </div>
+            <div class="key-rows">
+              <div class="key-row"><span class="key-badge">W</span><span class="key-desc">向前移动</span></div>
+              <div class="key-row"><span class="key-badge">S</span><span class="key-desc">向后移动</span></div>
+              <div class="key-row"><span class="key-badge">A</span><span class="key-desc">向左移动</span></div>
+              <div class="key-row"><span class="key-badge">D</span><span class="key-desc">向右移动</span></div>
+              <div class="key-row modifier"><span class="key-badge wide">Shift</span><span class="key-desc">冲刺加速</span></div>
+              <div class="key-row modifier"><span class="key-badge wide">Space</span><span class="key-desc">跳跃</span></div>
+              <div class="key-row modifier"><span class="key-badge">C</span><span class="key-desc">蹲伏隐蔽</span></div>
+            </div>
           </div>
-          <div class="help-section">
-            <div class="help-icon">🎯</div>
-            <h3>战斗控制</h3>
-            <div class="key-row"><span class="key-badge">鼠标</span> 控制视角</div>
-            <div class="key-row"><span class="key-badge">左键</span> 射击</div>
-            <div class="key-row"><span class="key-badge">R</span> 换弹</div>
-            <div class="key-row"><span class="key-badge">1</span> 主武器1</div>
-            <div class="key-row"><span class="key-badge">2</span> 主武器2</div>
-            <div class="key-row"><span class="key-badge">3</span> 副武器</div>
+          <div class="help-section combat">
+            <div class="section-header">
+              <div class="help-icon">🎯</div>
+              <h3>战斗控制</h3>
+              <div class="section-badge">核心</div>
+            </div>
+            <div class="key-rows">
+              <div class="key-row"><span class="key-badge wide">鼠标</span><span class="key-desc">控制视角</span></div>
+              <div class="key-row"><span class="key-badge wide">左键</span><span class="key-desc">射击攻击</span></div>
+              <div class="key-row"><span class="key-badge wide">右键</span><span class="key-desc">精确瞄准</span></div>
+              <div class="key-row"><span class="key-badge">R</span><span class="key-desc">换弹夹</span></div>
+              <div class="key-row"><span class="key-badge">1</span><span class="key-badge">2</span><span class="key-badge">3</span><span class="key-desc">切换武器</span></div>
+            </div>
           </div>
-          <div class="help-section">
-            <div class="help-icon">📦</div>
-            <h3>其他操作</h3>
-            <div class="key-row"><span class="key-badge">E</span> 拾取物品</div>
-            <div class="key-row"><span class="key-badge">ESC</span> 暂停游戏</div>
-            <div class="key-row"><span class="key-badge">M</span> 切换小地图</div>
+          <div class="help-section camera">
+            <div class="section-header">
+              <div class="help-icon">📷</div>
+              <h3>视角控制</h3>
+              <div class="section-badge">进阶</div>
+            </div>
+            <div class="key-rows">
+              <div class="key-row"><span class="key-badge">V</span><span class="key-desc">切换视角模式</span></div>
+              <div class="key-row"><span class="key-badge wide">滚轮</span><span class="key-desc">调整相机距离</span></div>
+            </div>
+            <div class="key-notes">
+              <div class="key-note"><span class="note-icon">👁️</span>第一人称：武器手部可见，沉浸感强</div>
+              <div class="key-note"><span class="note-icon">👤</span>第三人称：玩家模型可见，视野更广</div>
+            </div>
+          </div>
+          <div class="help-section system">
+            <div class="section-header">
+              <div class="help-icon">⚙️</div>
+              <h3>系统操作</h3>
+              <div class="section-badge">功能</div>
+            </div>
+            <div class="key-rows">
+              <div class="key-row"><span class="key-badge wide">ESC</span><span class="key-desc">暂停游戏</span></div>
+              <div class="key-row"><span class="key-badge">H</span><span class="key-desc">查看帮助</span></div>
+              <div class="key-row"><span class="key-badge">E</span><span class="key-desc">拾取物品</span></div>
+            </div>
+            <div class="key-notes">
+              <div class="key-note"><span class="note-icon">🖱️</span>点击屏幕锁定鼠标指针</div>
+              <div class="key-note"><span class="note-icon">🔓</span>按 ESC 解锁鼠标指针</div>
+            </div>
           </div>
         </div>
-        <div class="help-tips">
-          <p>💡 提示：点击屏幕锁定鼠标，再次按ESC解锁</p>
+        <div class="help-tips-section">
+          <div class="tips-header">
+            <span class="tips-icon">💡</span>
+            <span class="tips-title">实战技巧</span>
+          </div>
+          <div class="tips-grid">
+            <div class="tip-card">
+              <span class="tip-emoji">🎯</span>
+              <span class="tip-text">右键瞄准可降低射击散射，提高精准度</span>
+            </div>
+            <div class="tip-card">
+              <span class="tip-emoji">👀</span>
+              <span class="tip-text">第三人称视角可以更好地观察周围环境</span>
+            </div>
+            <div class="tip-card">
+              <span class="tip-emoji">🦆</span>
+              <span class="tip-text">蹲伏状态下移动更安静但速度较慢</span>
+            </div>
+          </div>
         </div>
-        <button id="help-back-btn" class="menu-btn">返回</button>
+        <button id="help-back-btn" class="menu-btn">
+          <span class="btn-icon">←</span>
+          <span class="btn-text">返回主菜单</span>
+        </button>
       </div>
     </div>
 
@@ -168,5 +344,41 @@
   </div>
 
   <script src="src/main.js" type="module"></script>
+  <script>
+    // 生成浮动粒子
+    document.addEventListener('DOMContentLoaded', function() {
+      const particlesContainer = document.getElementById('particles');
+      if (!particlesContainer) return;
+
+      const particleCount = 30;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 8 + 's';
+        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        particle.style.opacity = 0.3 + Math.random() * 0.4;
+        particle.style.width = (1 + Math.random() * 2) + 'px';
+        particle.style.height = particle.style.width;
+        particlesContainer.appendChild(particle);
+      }
+
+      // 检测菜单是否需要滚动
+      const menuScreen = document.getElementById('menu-screen');
+      if (menuScreen) {
+        function checkScroll() {
+          const hasScroll = menuScreen.scrollHeight > menuScreen.clientHeight;
+          if (hasScroll) {
+            menuScreen.style.justifyContent = 'flex-start';
+          } else {
+            menuScreen.style.justifyContent = 'center';
+          }
+        }
+        checkScroll();
+        window.addEventListener('resize', checkScroll);
+      }
+    });
+  </script>
 </body>
 </html>

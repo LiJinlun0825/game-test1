@@ -227,6 +227,13 @@ export class InputManager {
   }
 
   /**
+   * 获取鼠标滚轮增量
+   */
+  getWheelDelta() {
+    return this.mouse.wheel;
+  }
+
+  /**
    * 每帧更新 - 清除单帧状态
    */
   update() {

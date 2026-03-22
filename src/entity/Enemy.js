@@ -3,6 +3,8 @@
  */
 import { Entity } from './Entity.js';
 import { Health } from '../component/Health.js';
+import { HumanModelFactory } from '../model/HumanModelFactory.js';
+import { AnimationController } from '../animation/AnimationController.js';
 
 export class Enemy extends Entity {
   constructor() {
@@ -10,33 +12,43 @@ export class Enemy extends Entity {
     this.health = new Health(100);
     this.aiController = null;
     this.modelGroup = null;
+
+    // 骨骼动画系统
+    this.animationController = null;
+    this.skeletonData = null;
+
+    // 状态追踪
+    this.lastIsMoving = false;
+    this.lastState = null;
   }
 
   init() {
-    // 创建敌人模型组
-    this.modelGroup = new THREE.Group();
+    // 随机敌人外观
+    const skinColors = [0xE8C8A8, 0xD4A574, 0xC68642, 0x8D5524, 0xFFDBB4];
+    const shirtColors = [0x8B4513, 0x556B2F, 0x4A4A6A, 0x6B3A3A, 0x3A5A5A];
+    const pantsColors = [0x2F2F2F, 0x3A3A5A, 0x4A4A4A, 0x5A4A3A];
 
-    // 身体 - 使用圆柱体代替胶囊体
-    const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.0, 8);
-    const bodyMaterial = new THREE.MeshStandardMaterial({
-      color: 0x8B4513,
-      roughness: 0.7
-    });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    body.position.y = 0.8;
-    body.castShadow = true;
-    this.modelGroup.add(body);
+    const skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
+    const shirtColor = shirtColors[Math.floor(Math.random() * shirtColors.length)];
+    const pantsColor = pantsColors[Math.floor(Math.random() * pantsColors.length)];
 
-    // 头部
-    const headGeometry = new THREE.SphereGeometry(0.18, 8, 8);
-    const headMaterial = new THREE.MeshStandardMaterial({
-      color: 0xD2691E,
-      roughness: 0.5
+    // 使用带骨骼的人物模型
+    this.skeletonData = HumanModelFactory.createSkinnedHumanModel({
+      skinColor: skinColor,
+      shirtColor: shirtColor,
+      pantsColor: pantsColor,
+      hairColor: Math.random() > 0.5 ? 0x2A1A0A : 0x4A3A2A,
+      isEnemy: true,
+      height: 1.75
     });
-    const head = new THREE.Mesh(headGeometry, headMaterial);
-    head.position.y = 1.45;
-    head.castShadow = true;
-    this.modelGroup.add(head);
+
+    this.modelGroup = this.skeletonData.model;
+
+    // 创建动画控制器
+    this.animationController = new AnimationController(
+      this.skeletonData.bones,
+      this.skeletonData.bindPose
+    );
 
     this.object3D.add(this.modelGroup);
   }
@@ -89,20 +101,24 @@ export class Enemy extends Entity {
     }
 
     // 执行行为
+    let isMoving = false;
     switch (ai.state) {
       case 'patrol':
-        this.doPatrol(deltaTime);
+        isMoving = this.doPatrol(deltaTime);
         break;
       case 'chase':
-        this.doChase(deltaTime);
+        isMoving = this.doChase(deltaTime);
         break;
       case 'attack':
         this.doAttack(deltaTime);
         break;
       case 'flee':
-        this.doFlee(deltaTime);
+        isMoving = this.doFlee(deltaTime);
         break;
     }
+
+    // 更新动画
+    this.updateAnimation(deltaTime, isMoving, ai.state);
 
     // 更新模型朝向
     if (ai.state === 'chase' || ai.state === 'attack') {
@@ -114,6 +130,52 @@ export class Enemy extends Entity {
     }
 
     super.update(deltaTime);
+  }
+
+  /**
+   * 更新动画状态
+   */
+  updateAnimation(deltaTime, isMoving, aiState) {
+    if (!this.animationController) return;
+
+    // 根据AI状态更新动画
+    if (aiState !== this.lastState) {
+      switch (aiState) {
+        case 'patrol':
+          if (!isMoving) {
+            this.animationController.setState('idle');
+          }
+          break;
+        case 'chase':
+          this.animationController.setState('run');
+          break;
+        case 'attack':
+          this.animationController.setState('aim');
+          this.animationController.startAiming();
+          break;
+        case 'flee':
+          this.animationController.setState('run');
+          break;
+      }
+    }
+
+    // 根据移动状态更新
+    if (isMoving !== this.lastIsMoving) {
+      if (aiState === 'patrol') {
+        this.animationController.setState(isMoving ? 'walk' : 'idle');
+      }
+    }
+
+    // 调整动画速度
+    const speed = aiState === 'chase' || aiState === 'flee' ? 1.2 : 0.8;
+    this.animationController.setPlaybackSpeed(speed);
+
+    // 保存状态
+    this.lastIsMoving = isMoving;
+    this.lastState = aiState;
+
+    // 更新动画控制器
+    this.animationController.update(deltaTime);
   }
 
   doPatrol(deltaTime) {
@@ -128,11 +190,13 @@ export class Enemy extends Entity {
 
     if (dir.length() < 2) {
       this.setNewPatrolTarget();
+      return false;
     } else {
       dir.normalize();
       this.position.x += dir.x * ai.moveSpeed * 0.5 * deltaTime;
       this.position.z += dir.z * ai.moveSpeed * 0.5 * deltaTime;
       this.rotation.y = Math.atan2(dir.x, dir.z);
+      return true;
     }
   }
 
@@ -149,11 +213,14 @@ export class Enemy extends Entity {
     // 边界限制
     this.position.x = Math.max(-240, Math.min(240, this.position.x));
     this.position.z = Math.max(-240, Math.min(240, this.position.z));
+
+    return true;
   }
 
   doAttack(deltaTime) {
     // 简单攻击：向玩家射击
     // 实际射击逻辑需要武器系统支持
+    return false;
   }
 
   doFlee(deltaTime) {
@@ -169,6 +236,26 @@ export class Enemy extends Entity {
     // 边界限制
     this.position.x = Math.max(-240, Math.min(240, this.position.x));
     this.position.z = Math.max(-240, Math.min(240, this.position.z));
+
+    return true;
+  }
+
+  /**
+   * 触发受伤动画
+   */
+  triggerHurtAnimation() {
+    if (this.animationController) {
+      this.animationController.triggerHurt();
+    }
+  }
+
+  /**
+   * 触发死亡动画
+   */
+  triggerDeathAnimation() {
+    if (this.animationController) {
+      this.animationController.triggerDeath();
+    }
   }
 
   isDead() {
