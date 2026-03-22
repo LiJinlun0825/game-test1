@@ -59,7 +59,7 @@ export class RealisticWeaponModel {
 
     // 枪身
     const bodyGeometry = new THREE.BoxGeometry(0.04, 0.12, 0.18);
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x1a1a1a, flatShading: true });
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.3 });
     const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
     group.add(body);
 
@@ -73,14 +73,14 @@ export class RealisticWeaponModel {
     // 枪管
     const barrelGeometry = new THREE.CylinderGeometry(0.012, 0.012, 0.08, 8);
     barrelGeometry.rotateX(Math.PI / 2);
-    const barrelMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+    const barrelMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.5 });
     const barrel = new THREE.Mesh(barrelGeometry, barrelMaterial);
     barrel.position.set(0, 0.02, -0.12);
     group.add(barrel);
 
     // 准星
     const sightGeometry = new THREE.BoxGeometry(0.01, 0.02, 0.01);
-    const sightMaterial = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const sightMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7 });
     const frontSight = new THREE.Mesh(sightGeometry, sightMaterial);
     frontSight.position.set(0, 0.07, -0.06);
     group.add(frontSight);
@@ -95,8 +95,8 @@ export class RealisticWeaponModel {
     const group = new THREE.Group();
     group.name = name;
 
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x2a2a2a, flatShading: true });
-    const metalMaterial = new THREE.MeshLambertMaterial({ color: 0x444444, flatShading: true });
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.7, metalness: 0.2 });
+    const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.5 });
 
     // 枪身
     const bodyGeometry = new THREE.BoxGeometry(0.05, 0.08, 0.4);
@@ -144,8 +144,8 @@ export class RealisticWeaponModel {
     const group = new THREE.Group();
     group.name = name;
 
-    const woodMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513, flatShading: true });
-    const metalMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+    const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513, roughness: 0.8, metalness: 0.0 });
+    const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.5 });
 
     // 枪身
     const bodyGeometry = new THREE.BoxGeometry(0.045, 0.07, 0.35);
@@ -188,8 +188,8 @@ export class RealisticWeaponModel {
     const group = new THREE.Group();
     group.name = name;
 
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x1a3a1a, flatShading: true });
-    const metalMaterial = new THREE.MeshLambertMaterial({ color: 0x222222, flatShading: true });
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a3a1a, roughness: 0.7, metalness: 0.1 });
+    const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, metalness: 0.5 });
 
     // 枪身
     const bodyGeometry = new THREE.BoxGeometry(0.04, 0.08, 0.5);
@@ -205,7 +205,7 @@ export class RealisticWeaponModel {
 
     // 瞄准镜
     const scopeGeometry = new THREE.CylinderGeometry(0.015, 0.015, 0.15, 8);
-    const scopeMaterial = new THREE.MeshLambertMaterial({ color: 0x111111, flatShading: true });
+    const scopeMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.6 });
     const scope = new THREE.Mesh(scopeGeometry, scopeMaterial);
     scope.rotation.x = Math.PI / 2;
     scope.position.set(0, 0.06, -0.05);
@@ -225,7 +225,7 @@ export class RealisticWeaponModel {
 
     // 两脚架
     const bipodGeometry = new THREE.CylinderGeometry(0.003, 0.003, 0.1, 4);
-    const bipodMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const bipodMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6 });
     const bipodL = new THREE.Mesh(bipodGeometry, bipodMaterial);
     bipodL.position.set(-0.02, -0.08, -0.2);
     bipodL.rotation.z = 0.3;
@@ -245,8 +245,8 @@ export class RealisticWeaponModel {
     const group = new THREE.Group();
     group.name = name;
 
-    const bodyMaterial = new THREE.MeshLambertMaterial({ color: 0x1a1a1a, flatShading: true });
-    const metalMaterial = new THREE.MeshLambertMaterial({ color: 0x444444, flatShading: true });
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6, metalness: 0.3 });
+    const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.5, metalness: 0.5 });
 
     // 紧凑枪身
     const bodyGeometry = new THREE.BoxGeometry(0.04, 0.06, 0.2);
@@ -282,8 +282,8 @@ export class RealisticWeaponModel {
     const group = new THREE.Group();
     group.name = name;
 
-    const woodMaterial = new THREE.MeshLambertMaterial({ color: 0x5c3317, flatShading: true });
-    const metalMaterial = new THREE.MeshLambertMaterial({ color: 0x333333, flatShading: true });
+    const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x5c3317, roughness: 0.8, metalness: 0.0 });
+    const metalMaterial = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.5 });
 
     // 机匣
     const bodyGeometry = new THREE.BoxGeometry(0.045, 0.06, 0.15);
@@ -320,7 +320,7 @@ export class RealisticWeaponModel {
    */
   createDefaultModel() {
     const geometry = new THREE.BoxGeometry(0.05, 0.05, 0.2);
-    const material = new THREE.MeshLambertMaterial({ color: 0x333333 });
+    const material = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.6 });
     return new THREE.Mesh(geometry, material);
   }
 
