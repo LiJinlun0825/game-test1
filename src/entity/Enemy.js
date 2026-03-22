@@ -4,7 +4,6 @@
 import { Entity } from './Entity.js';
 import { Health } from '../component/Health.js';
 import { HumanModelFactory } from '../model/HumanModelFactory.js';
-import { AnimationController } from '../animation/AnimationController.js';
 
 export class Enemy extends Entity {
   constructor() {
@@ -13,13 +12,9 @@ export class Enemy extends Entity {
     this.aiController = null;
     this.modelGroup = null;
 
-    // 骨骼动画系统
-    this.animationController = null;
-    this.skeletonData = null;
-
-    // 状态追踪
-    this.lastIsMoving = false;
-    this.lastState = null;
+    // 动画状态
+    this.walkCycle = 0;
+    this.walkSpeed = 8;
   }
 
   init() {
@@ -32,23 +27,14 @@ export class Enemy extends Entity {
     const shirtColor = shirtColors[Math.floor(Math.random() * shirtColors.length)];
     const pantsColor = pantsColors[Math.floor(Math.random() * pantsColors.length)];
 
-    // 使用带骨骼的人物模型
-    this.skeletonData = HumanModelFactory.createSkinnedHumanModel({
+    // 使用新的人物模型工厂创建模型
+    this.modelGroup = HumanModelFactory.createHumanModel({
       skinColor: skinColor,
       shirtColor: shirtColor,
       pantsColor: pantsColor,
       hairColor: Math.random() > 0.5 ? 0x2A1A0A : 0x4A3A2A,
-      isEnemy: true,
-      height: 1.75
+      isEnemy: true
     });
-
-    this.modelGroup = this.skeletonData.model;
-
-    // 创建动画控制器
-    this.animationController = new AnimationController(
-      this.skeletonData.bones,
-      this.skeletonData.bindPose
-    );
 
     this.object3D.add(this.modelGroup);
   }
@@ -117,8 +103,11 @@ export class Enemy extends Entity {
         break;
     }
 
-    // 更新动画
-    this.updateAnimation(deltaTime, isMoving, ai.state);
+    // 更新行走动画
+    if (isMoving) {
+      this.walkCycle += deltaTime * this.walkSpeed;
+      this.updateWalkAnimation();
+    }
 
     // 更新模型朝向
     if (ai.state === 'chase' || ai.state === 'attack') {
@@ -133,49 +122,23 @@ export class Enemy extends Entity {
   }
 
   /**
-   * 更新动画状态
+   * 更新行走动画
    */
-  updateAnimation(deltaTime, isMoving, aiState) {
-    if (!this.animationController) return;
+  updateWalkAnimation() {
+    if (!this.modelGroup) return;
 
-    // 根据AI状态更新动画
-    if (aiState !== this.lastState) {
-      switch (aiState) {
-        case 'patrol':
-          if (!isMoving) {
-            this.animationController.setState('idle');
-          }
-          break;
-        case 'chase':
-          this.animationController.setState('run');
-          break;
-        case 'attack':
-          this.animationController.setState('aim');
-          this.animationController.startAiming();
-          break;
-        case 'flee':
-          this.animationController.setState('run');
-          break;
-      }
-    }
+    // 获取四肢
+    const leftLeg = this.modelGroup.getObjectByName('left-leg');
+    const rightLeg = this.modelGroup.getObjectByName('right-leg');
+    const leftArm = this.modelGroup.getObjectByName('left-arm');
+    const rightArm = this.modelGroup.getObjectByName('right-arm');
 
-    // 根据移动状态更新
-    if (isMoving !== this.lastIsMoving) {
-      if (aiState === 'patrol') {
-        this.animationController.setState(isMoving ? 'walk' : 'idle');
-      }
-    }
+    const swing = Math.sin(this.walkCycle) * 0.4;
 
-    // 调整动画速度
-    const speed = aiState === 'chase' || aiState === 'flee' ? 1.2 : 0.8;
-    this.animationController.setPlaybackSpeed(speed);
-
-    // 保存状态
-    this.lastIsMoving = isMoving;
-    this.lastState = aiState;
-
-    // 更新动画控制器
-    this.animationController.update(deltaTime);
+    if (leftLeg) leftLeg.rotation.x = swing;
+    if (rightLeg) rightLeg.rotation.x = -swing;
+    if (leftArm) leftArm.rotation.x = -swing * 0.5;
+    if (rightArm) rightArm.rotation.x = swing * 0.5;
   }
 
   doPatrol(deltaTime) {
@@ -238,24 +201,6 @@ export class Enemy extends Entity {
     this.position.z = Math.max(-240, Math.min(240, this.position.z));
 
     return true;
-  }
-
-  /**
-   * 触发受伤动画
-   */
-  triggerHurtAnimation() {
-    if (this.animationController) {
-      this.animationController.triggerHurt();
-    }
-  }
-
-  /**
-   * 触发死亡动画
-   */
-  triggerDeathAnimation() {
-    if (this.animationController) {
-      this.animationController.triggerDeath();
-    }
   }
 
   isDead() {
