@@ -6,11 +6,11 @@ import { SkeletonBuilder } from './SkeletonBuilder.js';
 
 export class HumanModelFactory {
   /**
-   * 创建带骨骼的蒙皮人体模型
+   * 创建完整的人体模型
    * @param {Object} options - 配置选项
-   * @returns {Object} 包含模型组、骨骼系统和骨骼的对象
+   * @returns {THREE.Group} 人体模型组
    */
-  static createSkinnedHumanModel(options = {}) {
+  static createHumanModel(options = {}) {
     const {
       skinColor = 0xE8C8A8,
       shirtColor = 0x4A7A4A,
@@ -1216,10 +1216,10 @@ export class HumanModelFactory {
     const lod = new THREE.LOD();
 
     // LOD 0 - 高精度骨骼模型（近距离）
-    const highDetail = this.createSkinnedHumanModel({
+    const highDetail = this.createHumanModel({
       skinColor, shirtColor, pantsColor, hairColor, isEnemy, isPlayer
     });
-    lod.addLevel(highDetail.model, lodDistances[0]);
+    lod.addLevel(highDetail, lodDistances[0]);
 
     // LOD 1 - 中等精度模型
     const mediumDetail = this.createMediumDetailModel({
