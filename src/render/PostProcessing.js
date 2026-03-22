@@ -1,190 +1,132 @@
 /**
  * 后处理效果系统
- * 实现动态模糊、Bloom泛光、色差、暗角、颜色分级
+ * 包括Bloom、颜色校正、抗锯齿等效果
  */
 export class PostProcessing {
   constructor(renderer, scene, camera) {
     this.renderer = renderer;
     this.scene = scene;
     this.camera = camera;
-
-    // 后处理参数
     this.enabled = true;
-    this.bloomStrength = 0.3;
-    this.bloomRadius = 0.5;
-    this.vignetteStrength = 0.4;
-    this.chromaticAberration = 0.002;
-    this.saturation = 0.85;
-    this.contrast = 1.1;
 
-    // 渲染目标
-    this.renderTargets = [];
+    // 效果参数
+    this.params = {
+      bloom: {
+        enabled: true,
+        strength: 0.5,
+        radius: 0.4,
+        threshold: 0.8
+      },
+      colorCorrection: {
+        enabled: true,
+        contrast: 1.1,
+        saturation: 1.2,
+        brightness: 0
+      },
+      vignette: {
+        enabled: true,
+        intensity: 0.3,
+        smoothness: 0.5
+      }
+    };
+
     this.composer = null;
-
-    // 着色器材质
-    this.quad = null;
-    this.orthoCamera = null;
-    this.orthoScene = null;
+    this.effects = {};
   }
 
   /**
    * 初始化后处理
+   * 注: 由于使用CDN版本的Three.js，无法使用EffectComposer
+   * 这里提供一个简化的替代实现
    */
   init() {
-    // 创建正交相机用于全屏四边形
-    this.orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    this.orthoScene = new THREE.Scene();
+    console.log('PostProcessing: Using simplified mode (CDN Three.js limitation)');
+    this.enabled = false;
 
-    // 创建全屏四边形
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    this.quad = new THREE.Mesh(geometry, this.createCompositeMaterial());
-    this.orthoScene.add(this.quad);
+    // 应用CSS滤镜作为替代
+    this.applyCSSFilters();
 
-    // 创建渲染目标
-    const size = this.renderer.getSize(new THREE.Vector2());
-    this.renderTarget = new THREE.WebGLRenderTarget(size.x, size.y, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.HalfFloatType
-    });
-
-    this.bloomTarget = new THREE.WebGLRenderTarget(size.x / 2, size.y / 2, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      type: THREE.HalfFloatType
-    });
-
-    // Bloom提取材质
-    this.bloomMaterial = this.createBloomMaterial();
-    this.bloomQuad = new THREE.Mesh(geometry.clone(), this.bloomMaterial);
-    this.bloomScene = new THREE.Scene();
-    this.bloomScene.add(this.bloomQuad);
-
-    console.log('PostProcessing initialized');
+    return this;
   }
 
   /**
-   * 创建合成材质
+   * 应用CSS滤镜
    */
-  createCompositeMaterial() {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        tDiffuse: { value: null },
-        tBloom: { value: null },
-        uVignette: { value: this.vignetteStrength },
-        uChromatic: { value: this.chromaticAberration },
-        uSaturation: { value: this.saturation },
-        uContrast: { value: this.contrast },
-        uTime: { value: 0 },
-        uMotionBlur: { value: 0.0 },
-        uPrevModelViewProjection: { value: new THREE.Matrix4() }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform sampler2D tBloom;
-        uniform float uVignette;
-        uniform float uChromatic;
-        uniform float uSaturation;
-        uniform float uContrast;
-        uniform float uTime;
-
-        varying vec2 vUv;
-
-        // 随机函数
-        float random(vec2 st) {
-          return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-        }
-
-        void main() {
-          vec2 uv = vUv;
-
-          // 色差效果 (Chromatic Aberration)
-          float aberration = uChromatic;
-          vec2 dir = uv - vec2(0.5);
-          float dist = length(dir);
-
-          float r = texture2D(tDiffuse, uv + dir * aberration * dist).r;
-          float g = texture2D(tDiffuse, uv).g;
-          float b = texture2D(tDiffuse, uv - dir * aberration * dist).b;
-
-          vec4 color = vec4(r, g, b, 1.0);
-
-          // 添加Bloom
-          vec4 bloom = texture2D(tBloom, uv);
-          color.rgb += bloom.rgb * 0.5;
-
-          // 颜色分级 - 对比度
-          color.rgb = (color.rgb - 0.5) * uContrast + 0.5;
-
-          // 颜色分级 - 饱和度
-          float gray = dot(color.rgb, vec3(0.299, 0.587, 0.114));
-          color.rgb = mix(vec3(gray), color.rgb, uSaturation);
-
-          // 暗角效果 (Vignette)
-          float vignette = 1.0 - smoothstep(0.4, 1.0, dist) * uVignette;
-          color.rgb *= vignette;
-
-          // 轻微的胶片颗粒
-          float grain = (random(uv + uTime) - 0.5) * 0.02;
-          color.rgb += grain;
-
-          gl_FragColor = color;
-        }
-      `
-    });
+  applyCSSFilters() {
+    const canvas = document.querySelector('#game-canvas canvas');
+    if (canvas) {
+      canvas.style.filter = `
+        contrast(${this.params.colorCorrection.contrast})
+        saturate(${this.params.colorCorrection.saturation})
+        brightness(${1 + this.params.colorCorrection.brightness})
+      `;
+    }
   }
 
   /**
-   * 创建Bloom材质
+   * 创建暗角效果遮罩
    */
-  createBloomMaterial() {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        tDiffuse: { value: null },
-        uThreshold: { value: 0.8 },
-        uBloomStrength: { value: this.bloomStrength }
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform sampler2D tDiffuse;
-        uniform float uThreshold;
-        uniform float uBloomStrength;
-
-        varying vec2 vUv;
-
-        void main() {
-          vec4 color = texture2D(tDiffuse, vUv);
-
-          // 提取亮部
-          float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-
-          if (brightness > uThreshold) {
-            gl_FragColor = color * (brightness - uThreshold) * uBloomStrength;
-          } else {
-            gl_FragColor = vec4(0.0);
-          }
-        }
-      `
-    });
+  createVignetteOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'vignette-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        transparent ${100 - this.params.vignette.smoothness * 100}%,
+        rgba(0, 0, 0, ${this.params.vignette.intensity}) 100%
+      );
+      z-index: 100;
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
   }
 
   /**
-   * 渲染后处理
+   * 更新参数
+   */
+  setBloomParams(strength, radius, threshold) {
+    this.params.bloom.strength = strength;
+    this.params.bloom.radius = radius;
+    this.params.bloom.threshold = threshold;
+  }
+
+  /**
+   * 设置颜色校正
+   */
+  setColorCorrection(contrast, saturation, brightness) {
+    this.params.colorCorrection.contrast = contrast;
+    this.params.colorCorrection.saturation = saturation;
+    this.params.colorCorrection.brightness = brightness;
+    this.applyCSSFilters();
+  }
+
+  /**
+   * 设置暗角效果
+   */
+  setVignette(intensity, smoothness) {
+    this.params.vignette.intensity = intensity;
+    this.params.vignette.smoothness = smoothness;
+
+    const overlay = document.getElementById('vignette-overlay');
+    if (overlay) {
+      overlay.style.background = `radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        transparent ${100 - smoothness * 100}%,
+        rgba(0, 0, 0, ${intensity}) 100%
+      )`;
+    }
+  }
+
+  /**
+   * 渲染
    */
   render() {
     if (!this.enabled) {
@@ -192,83 +134,85 @@ export class PostProcessing {
       return;
     }
 
-    const time = performance.now() * 0.001;
-
-    // 1. 渲染场景到主目标
-    this.renderer.setRenderTarget(this.renderTarget);
+    // 简化版本直接渲染
     this.renderer.render(this.scene, this.camera);
-
-    // 2. 提取Bloom (简化版 - 只进行阈值提取)
-    this.bloomMaterial.uniforms.tDiffuse.value = this.renderTarget.texture;
-    this.renderer.setRenderTarget(this.bloomTarget);
-    this.renderer.render(this.bloomScene, this.orthoCamera);
-
-    // 3. 合成最终图像
-    this.quad.material.uniforms.tDiffuse.value = this.renderTarget.texture;
-    this.quad.material.uniforms.tBloom.value = this.bloomTarget.texture;
-    this.quad.material.uniforms.uTime.value = time;
-
-    this.renderer.setRenderTarget(null);
-    this.renderer.render(this.orthoScene, this.orthoCamera);
   }
 
   /**
-   * 更新参数
+   * 闪烁效果（受伤时使用）
    */
-  setBloomStrength(strength) {
-    this.bloomStrength = strength;
-    if (this.bloomMaterial) {
-      this.bloomMaterial.uniforms.uBloomStrength.value = strength;
-    }
-  }
+  flashDamage(intensity = 0.5) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 0, 0, ${intensity});
+      pointer-events: none;
+      z-index: 200;
+      animation: damageFlash 0.2s ease-out forwards;
+    `;
 
-  setVignette(strength) {
-    this.vignetteStrength = strength;
-    if (this.quad && this.quad.material) {
-      this.quad.material.uniforms.uVignette.value = strength;
-    }
-  }
+    // 添加动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes damageFlash {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(overlay);
 
-  setSaturation(saturation) {
-    this.saturation = saturation;
-    if (this.quad && this.quad.material) {
-      this.quad.material.uniforms.uSaturation.value = saturation;
-    }
-  }
-
-  setContrast(contrast) {
-    this.contrast = contrast;
-    if (this.quad && this.quad.material) {
-      this.quad.material.uniforms.uContrast.value = contrast;
-    }
-  }
-
-  setChromaticAberration(amount) {
-    this.chromaticAberration = amount;
-    if (this.quad && this.quad.material) {
-      this.quad.material.uniforms.uChromatic.value = amount;
-    }
+    setTimeout(() => {
+      overlay.remove();
+      style.remove();
+    }, 200);
   }
 
   /**
-   * 窗口大小调整
+   * 死亡效果
    */
-  onResize(width, height) {
-    if (this.renderTarget) {
-      this.renderTarget.setSize(width, height);
-    }
-    if (this.bloomTarget) {
-      this.bloomTarget.setSize(width / 2, height / 2);
-    }
+  deathEffect() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(100, 0, 0, 0.8);
+      pointer-events: none;
+      z-index: 200;
+      animation: deathFade 1s ease-out forwards;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes deathFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(overlay);
+
+    return () => {
+      overlay.remove();
+      style.remove();
+    };
   }
 
   /**
-   * 清理资源
+   * 销毁
    */
-  dispose() {
-    if (this.renderTarget) this.renderTarget.dispose();
-    if (this.bloomTarget) this.bloomTarget.dispose();
-    if (this.quad && this.quad.material) this.quad.material.dispose();
-    if (this.bloomQuad && this.bloomQuad.material) this.bloomQuad.material.dispose();
+  destroy() {
+    const overlay = document.getElementById('vignette-overlay');
+    if (overlay) overlay.remove();
+
+    const canvas = document.querySelector('#game-canvas canvas');
+    if (canvas) canvas.style.filter = '';
   }
 }

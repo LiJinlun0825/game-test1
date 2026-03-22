@@ -1,137 +1,37 @@
 /**
  * 实体基类
- * 所有游戏对象的基类
+ * 所有游戏实体的基础类
  */
 export class Entity {
-  constructor(name = 'Entity') {
-    this.id = Entity.nextId++;
-    this.name = name;
-    this.active = true;
-
-    // Three.js 对象
+  constructor() {
+    this.id = Entity.generateId();
+    this.position = new THREE.Vector3(0, 0, 0);
+    this.rotation = new THREE.Euler(0, 0, 0);
     this.object3D = new THREE.Object3D();
-    this.object3D.userData.entity = this;
-
-    // 组件列表
-    this.components = [];
-
-    // 标签，用于快速查找
-    this.tags = new Set();
+    this.active = true;
   }
 
   /**
-   * 添加组件
+   * 生成唯一ID
    */
-  addComponent(component) {
-    this.components.push(component);
-    component.setEntity(this);
-    return component;
-  }
-
-  /**
-   * 获取组件
-   */
-  getComponent(componentClass) {
-    return this.components.find(c => c instanceof componentClass);
-  }
-
-  /**
-   * 获取所有组件
-   */
-  getComponents(componentClass) {
-    return this.components.filter(c => c instanceof componentClass);
-  }
-
-  /**
-   * 添加标签
-   */
-  addTag(tag) {
-    this.tags.add(tag);
-  }
-
-  /**
-   * 检查标签
-   */
-  hasTag(tag) {
-    return this.tags.has(tag);
-  }
-
-  /**
-   * 位置
-   */
-  get position() {
-    return this.object3D.position;
-  }
-
-  set position(value) {
-    this.object3D.position.copy(value);
-  }
-
-  /**
-   * 旋转
-   */
-  get rotation() {
-    return this.object3D.rotation;
-  }
-
-  set rotation(value) {
-    this.object3D.rotation.copy(value);
-  }
-
-  /**
-   * 缩放
-   */
-  get scale() {
-    return this.object3D.scale;
-  }
-
-  set scale(value) {
-    this.object3D.scale.copy(value);
+  static generateId() {
+    return 'entity_' + Math.random().toString(36).substr(2, 9);
   }
 
   /**
    * 初始化
    */
   init() {
-    this.components.forEach(c => c.init());
+    // 子类实现
   }
 
   /**
    * 更新
    */
   update(deltaTime) {
-    if (!this.active) return;
-
-    this.components.forEach(c => c.update(deltaTime));
-  }
-
-  /**
-   * 固定更新（物理）
-   */
-  fixedUpdate(fixedDeltaTime) {
-    if (!this.active) return;
-
-    this.components.forEach(c => c.fixedUpdate && c.fixedUpdate(fixedDeltaTime));
-  }
-
-  /**
-   * 销毁
-   */
-  destroy() {
-    this.components.forEach(c => c.destroy && c.destroy());
-
-    if (this.object3D.parent) {
-      this.object3D.parent.remove(this.object3D);
-    }
-  }
-
-  /**
-   * 设置父节点
-   */
-  setParent(parent) {
-    if (parent.object3D) {
-      parent.object3D.add(this.object3D);
-    }
+    // 同步Object3D位置
+    this.object3D.position.copy(this.position);
+    this.object3D.rotation.copy(this.rotation);
   }
 
   /**
@@ -147,7 +47,81 @@ export class Entity {
   removeFromScene(scene) {
     scene.remove(this.object3D);
   }
-}
 
-// 静态ID计数器
-Entity.nextId = 1;
+  /**
+   * 设置位置
+   */
+  setPosition(x, y, z) {
+    this.position.set(x, y, z);
+    this.object3D.position.set(x, y, z);
+  }
+
+  /**
+   * 设置旋转
+   */
+  setRotation(x, y, z) {
+    this.rotation.set(x, y, z);
+    this.object3D.rotation.set(x, y, z);
+  }
+
+  /**
+   * 获取前方向
+   */
+  getForward() {
+    const forward = new THREE.Vector3(0, 0, -1);
+    forward.applyQuaternion(this.object3D.quaternion);
+    return forward;
+  }
+
+  /**
+   * 获取右方向
+   */
+  getRight() {
+    const right = new THREE.Vector3(1, 0, 0);
+    right.applyQuaternion(this.object3D.quaternion);
+    return right;
+  }
+
+  /**
+   * 获取到目标的方向
+   */
+  getDirectionTo(target) {
+    return new THREE.Vector3()
+      .subVectors(target.position, this.position)
+      .normalize();
+  }
+
+  /**
+   * 获取到目标的距离
+   */
+  getDistanceTo(target) {
+    return this.position.distanceTo(target.position);
+  }
+
+  /**
+   * 看向目标
+   */
+  lookAt(target) {
+    this.object3D.lookAt(target.position);
+    this.rotation.copy(this.object3D.rotation);
+  }
+
+  /**
+   * 清理
+   */
+  dispose() {
+    // 清理Object3D
+    this.object3D.traverse((child) => {
+      if (child.geometry) {
+        child.geometry.dispose();
+      }
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(mat => mat.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    });
+  }
+}

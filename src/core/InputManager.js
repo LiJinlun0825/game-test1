@@ -15,22 +15,12 @@ export class InputManager {
       y: 0,
       deltaX: 0,
       deltaY: 0,
-      buttons: [false, false, false], // 左、中、右
+      buttons: [false, false, false],
       wheel: 0
     };
 
     // 鼠标锁定状态
     this.isPointerLocked = false;
-
-    // 绑定的回调
-    this.callbacks = {
-      onKeyDown: [],
-      onKeyUp: [],
-      onMouseDown: [],
-      onMouseUp: [],
-      onMouseMove: [],
-      onWheel: []
-    };
   }
 
   /**
@@ -102,16 +92,10 @@ export class InputManager {
    */
   onKeyDown(e) {
     const code = e.code;
-
-    // 防止重复触发
     if (!this.keys[code]) {
       this.keysPressed[code] = true;
     }
-
     this.keys[code] = true;
-
-    // 触发回调
-    this.callbacks.onKeyDown.forEach(cb => cb(e));
   }
 
   /**
@@ -119,23 +103,17 @@ export class InputManager {
    */
   onKeyUp(e) {
     const code = e.code;
-
     this.keys[code] = false;
     this.keysReleased[code] = true;
-
-    // 触发回调
-    this.callbacks.onKeyUp.forEach(cb => cb(e));
   }
 
   /**
    * 鼠标移动
    */
   onMouseMove(e) {
-    // 更新绝对位置
     this.mouse.x = e.clientX;
     this.mouse.y = e.clientY;
 
-    // 更新增量（指针锁定模式下使用movementX/Y）
     if (this.isPointerLocked) {
       this.mouse.deltaX = e.movementX || e.mozMovementX || e.webkitMovementX || 0;
       this.mouse.deltaY = e.movementY || e.mozMovementY || e.webkitMovementY || 0;
@@ -143,9 +121,6 @@ export class InputManager {
       this.mouse.deltaX = 0;
       this.mouse.deltaY = 0;
     }
-
-    // 触发回调
-    this.callbacks.onMouseMove.forEach(cb => cb(e));
   }
 
   /**
@@ -153,9 +128,6 @@ export class InputManager {
    */
   onMouseDown(e) {
     this.mouse.buttons[e.button] = true;
-
-    // 触发回调
-    this.callbacks.onMouseDown.forEach(cb => cb(e));
   }
 
   /**
@@ -163,9 +135,6 @@ export class InputManager {
    */
   onMouseUp(e) {
     this.mouse.buttons[e.button] = false;
-
-    // 触发回调
-    this.callbacks.onMouseUp.forEach(cb => cb(e));
   }
 
   /**
@@ -174,9 +143,6 @@ export class InputManager {
   onWheel(e) {
     e.preventDefault();
     this.mouse.wheel = e.deltaY;
-
-    // 触发回调
-    this.callbacks.onWheel.forEach(cb => cb(e));
   }
 
   /**
@@ -202,7 +168,6 @@ export class InputManager {
 
   /**
    * 检查鼠标按钮是否被按住
-   * @param {number} button - 0: 左键, 1: 中键, 2: 右键
    */
   isMouseButtonHeld(button) {
     return this.mouse.buttons[button] === true;
@@ -220,13 +185,11 @@ export class InputManager {
 
   /**
    * 获取移动输入向量
-   * @returns {Object} { x: -1到1, z: -1到1 }
    */
   getMovementInput() {
     let x = 0;
     let z = 0;
 
-    // WASD 移动
     if (this.isKeyHeld('KeyW') || this.isKeyHeld('ArrowUp')) z -= 1;
     if (this.isKeyHeld('KeyS') || this.isKeyHeld('ArrowDown')) z += 1;
     if (this.isKeyHeld('KeyA') || this.isKeyHeld('ArrowLeft')) x -= 1;
@@ -257,13 +220,6 @@ export class InputManager {
   }
 
   /**
-   * 是否趴下
-   */
-  isProne() {
-    return this.isKeyHeld('KeyZ');
-  }
-
-  /**
    * 是否跳跃
    */
   isJumping() {
@@ -274,41 +230,17 @@ export class InputManager {
    * 每帧更新 - 清除单帧状态
    */
   update() {
-    // 清除按下单帧状态
     this.keysPressed = {};
     this.keysReleased = {};
-
-    // 清除鼠标增量
     this.mouse.deltaX = 0;
     this.mouse.deltaY = 0;
     this.mouse.wheel = 0;
   }
 
   /**
-   * 注册回调
-   */
-  on(event, callback) {
-    if (this.callbacks[event]) {
-      this.callbacks[event].push(callback);
-    }
-  }
-
-  /**
-   * 移除回调
-   */
-  off(event, callback) {
-    if (this.callbacks[event]) {
-      const index = this.callbacks[event].indexOf(callback);
-      if (index > -1) {
-        this.callbacks[event].splice(index, 1);
-      }
-    }
-  }
-
-  /**
    * 清理
    */
   dispose() {
-    // 这里不需要移除事件监听器，因为是全局的
+    // 事件监听器会随页面卸载自动清理
   }
 }
